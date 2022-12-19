@@ -4,39 +4,26 @@ from unittest import result
 
 
 def avgRotorSpeed(statusQuery, parentId):
-    # Write your code here
-
-    result = requests.get('https://jsonmock.hackerrank.com/api/iot_devices/search?status=').json()
-    #find the number of pages in the json data
+    result = requests.get(f'https://jsonmock.hackerrank.com/api/iot_devices/search?status={statusQuery}').json()
     pages = result['total_pages']
-    # create a list for the different rotor speeds found while iterating through the data
     runRotors = []
-    #iterate through the pages of data with the statusQuery
     for page in range(1, pages + 1):
-        request = requests.get(
-            'https://jsonmock.hackerrank.com/api/iot_devices/search?status=' + statusQuery + '&page=' + str(
-                page)).json()
+        request = requests.get(f'https://jsonmock.hackerrank.com/api/iot_devices/search?status={statusQuery}&page={page}').json()
         data = request['data']
-        #pick up and print out the info for statusQuery and parentId in each page and append rotor speeds to runRotors
-        for i in range(10):
+        for item in data:
             try:
-                parents = data[i]['parent']['id']
-                status = data[i]['status']
-                rotorSpeed = data[i]['operatingParams']['rotorSpeed']
-
-
-                if (parents == parentId):
-                    print('parentId = ' + str(parents))
-                    print('rotorSpeed = ' + str(rotorSpeed))
+                parents = item['parent']
+                if parents is None:
+                    continue
+                parents_id = parents['id']
+                rotorSpeed = item['operatingParams']['rotorSpeed']
+                if parents_id == parentId:
                     runRotors.append(rotorSpeed)
-                    print(f'Running Rotors speeds: {runRotors}')
-                    print(f'The Average rotor speed is:{sum(runRotors) // len(runRotors)}')
-                #print 0 if there is not a match
-                else:
-                    print(0)
-            except:
+            except KeyError:
                 pass
-    return
+    if runRotors:
+        return sum(runRotors) // len(runRotors)
+    return 0
 
 
 
